@@ -115,5 +115,41 @@ async function drawBars() {
 
   // 7. Set up interactions
 
+  binGroups.select("rect")
+    .on("mouseenter", onMouseEnter)
+    .on("mouseleave", onMouseLeave)
+  
+  const tooltip = d3.select("#tooltip")  
+  
+  function onMouseEnter(datum) {
+    tooltip.select("#count")
+      .text(yAccessor(datum))
+
+    const formatHumidity = d3.format(".2f")
+    tooltip.select("#range")
+      .text([
+        formatHumidity(datum.x0),
+        formatHumidity(datum.x1)
+      ].join("-"))
+    
+    const x = xScale(datum.x0)
+      + (xScale(datum.x1) - xScale(datum.x0)) / 2
+      + dimensions.margin.left
+    
+    const y = yScale(yAccessor(datum))
+      + dimensions.margin.top
+  
+    tooltip.style("transform", `translate(calc(-50% + ${x}px), calc(-100% + ${y}px))`)  
+
+    tooltip.style("opacity", 1)
+    
+    
+    
+  }
+
+  function onMouseLeave(datum) {
+    tooltip.style("opacity", 0)
+  }
+
 }
 drawBars()

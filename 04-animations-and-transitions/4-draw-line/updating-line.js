@@ -31,13 +31,25 @@ async function drawLineChart() {
       .attr("height", dimensions.height)
 
   const bounds = wrapper.append("g")
-      .style("transform", `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px)`)
+    .style("transform", `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px)`)
+  
+  bounds.append("defs")
+    .append("clipPath")
+    .attr("id", "bounds-clip-path")
+    .append("rect")
+    .attr("width", dimensions.boundedWidth)
+    .attr("height", dimensions.boundedHeight)
 
   // init static elements
   bounds.append("rect")
-      .attr("class", "freezing")
-  bounds.append("path")
-      .attr("class", "line")
+    .attr("class", "freezing")
+  
+  const clip = bounds.append("g")
+    .attr("clip-path", "url(#bounds-clip-path")
+  
+  clip.append("path").attr("class", "line")
+
+  
   bounds.append("g")
       .attr("class", "x-axis")
       .style("transform", `translateY(${dimensions.boundedHeight}px)`)
@@ -65,12 +77,18 @@ async function drawLineChart() {
 
     // 5. Draw data
 
+    const lastTwoPoints = dataset.slice(-2)
+    const pixelsBetweenLastPoints = xScale(xAccessor(lastTwoPoints[1])) - xScale(xAccessor(lastTwoPoints[0]))
+
     const lineGenerator = d3.line()
       .x(d => xScale(xAccessor(d)))
       .y(d => yScale(yAccessor(d)))
 
     const line = bounds.select(".line")
-        .attr("d", lineGenerator(dataset))
+      .attr("d", lineGenerator(dataset))
+      .style("transform", `translateX(${pixelsBetweenLastPoints}px)`)
+      .transition().duration(1000)
+      .style("transform", "none")
 
     // 6. Draw peripherals
 
@@ -84,6 +102,7 @@ async function drawLineChart() {
       .scale(xScale)
 
     const xAxis = bounds.select(".x-axis")
+      .transition().duration(1000)
       .call(xAxisGenerator)
   }
   drawLine(dataset)
