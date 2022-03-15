@@ -99,6 +99,62 @@ async function drawLineChart() {
     .call(xAxisGenerator)
 
   // 7. Set up interactions
+  const listeningRect = bounds.append("rect")
+    .attr("class", "listening-rect")
+    .attr("width", dimensions.boundedWidth)
+    .attr("height", dimensions.boundedHeight)
+    .on("mousemove", onMouseMove)
+    .on("mouseleave", onMouseLeave)
+  
+  
+  const tooltip = d3.select("#tooltip")
+  const tooltipCircle = bounds.append("circle")
+    .attr("r", 4)
+    .attr("stroke", "#af9358")
+    .attr("fill", "white")
+    .attr("stroke-width", 2)
+    .style("opacity", 0)
+
+  function onMouseMove() {
+
+    const mousePosition = d3.mouse(this)
+    const hoveredDate = xScale.invert(mousePosition[0])
+
+    const getDistanceFromhoveredDate = d => Math.abs(xAccessor(d) - hoveredDate)
+
+    const closestIndex = d3.scan(dataset, (a, b) => (
+      getDistanceFromhoveredDate(a) - getDistanceFromhoveredDate(b)
+    ))
+
+    const closestDataPoint = dataset[closestIndex]
+    const closestXValue = xAccessor(closestDataPoint)
+    const closestYValue = yAccessor(closestDataPoint)
+
+    const formatDate = d3.timeFormat("%B %A %-d, %Y")
+    tooltip.select("#date")
+      .text(formatDate(closestXValue))
+    
+    const formatTemperature = d => `${d3.format(".1f")(d)}F`
+    tooltip.select("#temperature")
+      .html(formatTemperature(closestYValue))
+    
+    const x = xScale(closestXValue) + dimensions.margin.left
+    const y = yScale(closestYValue) + dimensions.margin.top
+
+    tooltip.style("transform", `translate(calc(-50% + ${x}px), calc(-100% + ${y}px))`)
+    tooltipCircle
+      .attr("cx", xScale(closestXValue))
+      .attr("cy", yScale(closestYValue))
+      .style("opacity", 1)
+
+    tooltip.style("opacity", 1)
+    
+  }
+
+  function onMouseLeave() {
+    tooltip.style("opacity", 0)
+    tooltipCircle.style("opacity", 0)
+  }
 
 }
 drawLineChart()
